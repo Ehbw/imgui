@@ -3392,7 +3392,7 @@ const char* ImFont::CalcWordWrapPositionA(float scale, const char* text, const c
             }
         }
 
-        if (c == '^' && *(s) && *(s) != '^')
+        if (c == '^' && *(s) && *(s) != '^' && (*(s) >= '0' && *(s) <= '9'))
         {
             ++s;
             continue;
@@ -3515,7 +3515,7 @@ ImVec2 ImFont::CalcTextSizeA(float size, float max_width, float wrap_width, cons
                 continue;
         }
 
-        if (c == '^' && *(s) && *(s) != '^')
+        if (c == '^' && *(s) && *(s) != '^' && (*(s) >= '0' && *(s) <= '9'))
         {
             ++s;
             continue;
@@ -3634,7 +3634,7 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, Im
 
     while (s < text_end)
     {
-        if (*s == '^' && *(s + 1) && *(s + 1) != '^')
+        if (*s == '^' && *(s + 1) && *(s + 1) != '^' && (*(s + 1) >= '0' && *(s + 1) <= '9'))
         {
             col = color_codes[(*(s + 1) - '0') % 8];
             s += 2;

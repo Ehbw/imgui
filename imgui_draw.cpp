@@ -5413,6 +5413,14 @@ const char* ImFont::CalcWordWrapPosition(float size, const char* text, const cha
             }
         }
 
+        // CFX: Support Quake-style colour code
+        if (c == '^' && *(s) && *(s) != '^' && (*(s) >= '0' && *(s) <= '9'))
+        {
+            ++s;
+            continue;
+        }
+        //
+
         // Optimized inline version of 'float char_width = GetCharAdvance((ImWchar)c);'
         float char_width = (c < (unsigned int)baked->IndexAdvanceX.Size) ? baked->IndexAdvanceX.Data[c] : -1.0f;
         if (char_width < 0.0f)
@@ -5523,6 +5531,14 @@ ImVec2 ImFont::CalcTextSizeA(float size, float max_width, float wrap_width, cons
                 continue;
         }
 
+        // CFX: Support Quake-style colour codes
+        if (c == '^' && *(s) && *(s) != '^' && (*(s) >= '0' && *(s) <= '9'))
+        {
+            ++s;
+            continue;
+        }
+        //
+
         // Optimized inline version of 'float char_width = GetCharAdvance((ImWchar)c);'
         float char_width = (c < (unsigned int)baked->IndexAdvanceX.Size) ? baked->IndexAdvanceX.Data[c] : -1.0f;
         if (char_width < 0.0f)
@@ -5599,6 +5615,24 @@ begin:
     if (y > clip_rect.w)
         return;
 
+    // CFX: Support Quake-style color codes. Adapated from https://github.com/ocornut/imgui/issues/902#issuecomment-316835510
+    const ImU32 alpha = (col >> 24);
+    const ImU32 color_codes[10] =
+    {
+        col,                              // default 0
+        ImColor(0xff, 0x44, 0x44, alpha), // red     1
+        ImColor(0x99, 0xcc, 0x00, alpha), // green   2
+        ImColor(0xff, 0xbb, 0x33, alpha), // yellow  3
+        ImColor(0x00, 0x99, 0xcc, alpha), // blue    4
+        ImColor(0x33, 0xb5, 0xe5, alpha), // cyan    5
+        ImColor(0xaa, 0x66, 0xcc, alpha), // magenta 6
+        col,                              // reset   7
+        ImColor(0xcc, 0x00, 0x00, alpha), // black   8
+        ImColor(0xcc, 0x00, 0x00, alpha), // black   9
+    };
+    //
+
+
     if (!text_end)
         text_end = text_begin + ImStrlen(text_begin); // ImGui:: functions generally already provides a valid text_end, so this is merely to handle direct calls.
 
@@ -5662,6 +5696,15 @@ begin:
 
     while (s < text_end)
     {
+        //CFX: Support Quake-style colour codes
+        if (*s == '^' && *(s + 1) && *(s + 1) != '^' && (*(s + 1) >= '0' && *(s + 1) <= '9'))
+        {
+            col = color_codes[(*(s + 1) - '0') % 8];
+            s += 2;
+            continue;
+        }
+        //
+
         if (word_wrap_enabled)
         {
             // Calculate how far we can render. Requires two passes on the string data but keeps the code simple and not intrusive for what's essentially an uncommon feature.
@@ -5675,6 +5718,9 @@ begin:
                 if (y > clip_rect.w)
                     break; // break out of main loop
                 word_wrap_eol = NULL;
+                //CFX: Support Quake-style colour codes
+                col = color_codes[0]; // reset color code on new line
+                //
                 s = CalcWordWrapNextLineStartA(s, text_end); // Wrapping skips upcoming blanks
                 continue;
             }
